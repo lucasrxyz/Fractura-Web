@@ -1,0 +1,87 @@
+   /* Reset */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Minecraft", monospace;
+      /* background-image: url("../assets/images/temp_background.png"); */
+      background-size: cover;      /* l'image couvre tout le menu */
+      background-position: center; /* centrée */
+      background-repeat: no-repeat;
+      display: flex;
+      align-items: center;
+      height: 100vh;
+      image-rendering: pixelated; /* évite le flou */
+      image-rendering: crisp-edges;
+
+      background-color: #04000A;
+    }
+
+    h1 {
+      font-size: 48px;
+      color: #333;
+      margin-bottom: 40px;
+      text-shadow: 2px 2px #888;
+    }
+
+    .btn {
+      display: block;
+      margin: 15px auto;
+      font-size: 18px;
+      cursor: pointer;
+
+      background-color: #e5c5eb;
+      border-color: #D4A5B7;
+      color: #D683CF;
+    }
+
+    .btnplay {
+      display: block;
+      margin: 30px auto;
+      font-size: 18px;
+      cursor: pointer;
+      border-color: #D4A5B7;
+      color: #D683CF;
+      transition: 0.25s ease-in-out;
+    }
+    .btnplay img {
+        width: 300px;         
+        height: auto;
+
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        transition: 0.25s ease-in-out;
+    }
+
+    .btnplay img:hover {
+        transition: 0.15s ease-out;
+        margin-left:5px;
+    }
+
+    .btn:hover {
+      background: #b56576;
+      transform: scale(1.05);
+    }
+
+    /* Canvas test sprite */
+    canvas {
+      display: block;
+      margin: 20px auto;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .flogo img {
+        width: 600px;         
+        height: auto;
+        margin-left:25px;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+    }
+    
+    .backimg img {
+        position:absolute;
+        width:1000px;
+        float:right;
+        margin-left:800px;
+        margin-top:-200px;
+    }

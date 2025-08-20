@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="styles/menu.css">
+    <title>Fractura - Menu</title>
+</head>
+
+<body>
+  <div>
+    <div>
+
+        <div class="flogo">
+          <img src="assets/images/fractura_title.png">
+        </div>
+
+        <div class="backimg">
+            <img src="assets/images/temp_background.png">
+        </div>
+
+        <div style="margin-left:50px;">
+            <div class="btnplay" id="btnplay" onclick="startGame()">
+              <img class="btnImg" src="assets/UI/play.png">
+            </div>
+            <div class="btnplay" id="NewGame" onclick="newGame()">
+                <img class="btnImg" src="assets/UI/charger.png">
+            </div>
+
+            <div class="btnplay" id="Settings" onclick="options()">
+              <img id="playImg" src="assets/UI/reglages.png">
+            </div>
+    </div>
+
+
+    <!-- <canvas id="spriteCanvas" width="64" height="64"></canvas> -->
+  </div>
+
+  <script>
+    // // Exemple : affichage d’un sprite pixel art en net
+    // const canvas = document.getElementById("spriteCanvas");
+    // const ctx = canvas.getContext("2d");
+    // ctx.imageSmoothingEnabled = false; // pas de flou
+
+    // const sprite = new Image();
+    // sprite.src = "sprites/player.png";
+    // sprite.onload = () => {
+    //   ctx.drawImage(sprite, 0, 0, 32, 32, 0, 0, 64, 64); 
+    // };
+
+    // Exemples pour les boutons
+    function startGame() {
+      alert("Chargement de la sauvegarde...");
+    }
+
+    function newGame() {
+      alert("Création d'une nouvelle partie...");
+    }
+
+    function options() {
+      alert("Options en développement...");
+    }
+
+    const buttons = [
+    {btnId: "btnplay", default: "assets/UI/play.png", hover: "assets/UI/play_hover.png"},
+    {btnId: "NewGame", default: "assets/UI/charger.png", hover: "assets/UI/charger_hover.png"},
+    {btnId: "Settings", default: "assets/UI/reglages.png", hover: "assets/UI/reglages_hover.png"}
+    ];
+
+    buttons.forEach(item => {
+        const btn = document.getElementById(item.btnId);
+        const img = btn.querySelector("img");
+
+    btn.addEventListener("mouseenter", () => {
+        img.src = item.hover;
+    });
+
+    btn.addEventListener("mouseleave", () => {
+     img.src = item.default;
+    });
+});
+
+
+  </script>
+</body>
+</html>
