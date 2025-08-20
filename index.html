@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="styles/menu.css">
+    <link rel="stylesheet" href="styles/fondus_transis.css">
     <title>Fractura - Menu</title>
 </head>
 
@@ -20,10 +21,10 @@
         </div>
 
         <div style="margin-left:50px;">
-            <div class="btnplay" id="btnplay" onclick="startGame()">
+            <div class="btnplay" id="btnplay" onclick="newGame()">
               <img class="btnImg" src="assets/UI/play.png">
             </div>
-            <div class="btnplay" id="NewGame" onclick="newGame()">
+            <div class="btnplay" id="NewGame" onclick="loadGame()">
                 <img class="btnImg" src="assets/UI/charger.png">
             </div>
 
@@ -31,30 +32,21 @@
               <img id="playImg" src="assets/UI/reglages.png">
             </div>
     </div>
-
-
-    <!-- <canvas id="spriteCanvas" width="64" height="64"></canvas> -->
   </div>
 
+  <div id="fadeOverlay"></div>
+
   <script>
-    // // Exemple : affichage d’un sprite pixel art en net
-    // const canvas = document.getElementById("spriteCanvas");
-    // const ctx = canvas.getContext("2d");
-    // ctx.imageSmoothingEnabled = false; // pas de flou
-
-    // const sprite = new Image();
-    // sprite.src = "sprites/player.png";
-    // sprite.onload = () => {
-    //   ctx.drawImage(sprite, 0, 0, 32, 32, 0, 0, 64, 64); 
-    // };
-
-    // Exemples pour les boutons
-    function startGame() {
+    function loadGame() {
       alert("Chargement de la sauvegarde...");
     }
 
     function newGame() {
-      alert("Création d'une nouvelle partie...");
+      const overlay = document.getElementById("fadeOverlay");
+      overlay.classList.add("active");
+      setTimeout(() => {
+        window.location.href = "html utilitaire/loading.html";
+      }, 1000); // 1s pour laisser le temps au fondu
     }
 
     function options() {

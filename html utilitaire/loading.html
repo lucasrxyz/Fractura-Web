@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Fractura - Chargement</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #04000A;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+      font-family: monospace;
+      font-size: 20px;
+
+      image-rendering: pixelated; /* évite le flou */
+      image-rendering: crisp-edges;
+    }
+
+    /* Conteneur pour le logo de chargement */
+    .loading-logo {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      animation: spin 4s linear infinite, fadeIn 2s forwards;
+    }
+
+    .fade-in {
+      opacity: 0;
+      animation: fadeIn 2s forwards;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Logo en bas à droite qui tourne -->
+  <img class="loading-logo" src="../assets/UI/mdi/loading_static.png">
+
+  <script>
+    setTimeout(() => {
+      window.location.href = "../components/dialogue.html";
+    }, 300);
+  </script>
+</body>
+</html>
