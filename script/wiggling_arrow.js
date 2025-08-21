@@ -5,5 +5,5 @@ window.addEventListener('load', () => {
     setTimeout(() => {
         arrow.style.opacity = '1';       // apparition instantanée
         arrow.classList.add('wiggle');   // lancer l'animation wiggle
-    }, 9000);
+    }, 5600);
 });

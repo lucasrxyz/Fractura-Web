@@ -1,0 +1,24 @@
+{
+  "name": "fractura-web",
+  "version": "1.0.0",
+  "description": "Making of a 2D RPG Top Down view in pixel art.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucasrxyz/Fractura-Web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lucasrxyz/Fractura-Web/issues"
+  },
+  "homepage": "https://github.com/lucasrxyz/Fractura-Web#readme",
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  }
+}

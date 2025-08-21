@@ -3,100 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <title>Fractura - Dialogue</title>
-  <style>
-    body {
-      margin: 0;
-      background-color: #04000A;
-      color: white;
-      font-family: "CutePixel", monospace;
-      font-size: 22px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      text-align: center;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-    }
-
-    .dial_start {
-      position: relative;
-      display: inline-block;
-    }
-
-    .dialog {
-        display: block;
-        width: 900px;
-        opacity: 0;
-        animation: fadeIn 1s forwards;
-    }
-
-    .enter {
-        position: absolute;
-        top: -1%;
-        left: 0%;
-        width: 900px;
-        opacity: 0;
-        animation: fadeIn 1s forwards;
-    }
-
-    .text {
-      position: absolute;
-      text-align: left;
-      top: 40%;
-      left: 52%;
-      transform: translate(-50%, -50%);
-      opacity: 1; /* on gère l'animation par JS maintenant */
-      font-size: 35px;
-      width: 90%;
-      color: #D683CF;
-    }
-
-    .color56B8FF {
-        color: #56B8FF;
-    }
-
-    @keyframes fadeIn {
-      to { opacity: 1; }
-    }
-
-    @font-face {
-        font-family: "CutePixel";
-        src: url("../assets/fonts/CutePixel.ttf") format("truetype");
-        font-display: swap;
-    }
-
-    @keyframes wiggle {
-        0% { transform: translateY(0); }
-        25% { transform: translateY(4px); }
-        50% { transform: translateY(0); }
-        75% { transform: translateY(-4px); }
-        100% { transform: translateY(0); }
-    }
-    .arrow {
-    position: absolute;
-    top: -1%;
-    left: -26.67%;
-    width: 900px;
-    opacity: 0; /* invisible au départ */
-    /* aucune animation ici */
-}
-
-    .arrow.wiggle {
-        animation: wiggle 0.8s infinite; /* 0.5s par cycle, en boucle infinie */
-    }
-
-  </style>
+  <link rel="stylesheet" href="../styles/dialogue1.css">
+  <link rel="stylesheet" href="../styles/choose_roles.css">
 </head>
 <body>
     <div class="dial_start">
         <img class="dialog" src="../assets/UI/dialogs/dialog.png" alt="Dialogue">
-        <img class="arrow" src="../assets/UI/dialogs/arrow_dialog_unactive.png" alt="Enter">
-        <div class="text" id="dialogue">
-            Il y a des siècles, le monde était uni par le Cristal-Monde, une pierre d'énergie infinie.<br>
-            Mais lors de la <span class="color56B8FF">Grande Rupture</span>, le Cristal se cassa en mille morceaux...<br>
-        </div>
+        <img class="arrow" src="../assets/UI/dialogs/arrow_dialog_unactive.png" alt="Flèche">
+        <div class="text" id="dialogue"></div>
     </div>
+    
+    <!-- LIGNE / ROW pour choisir le role (cliquer sur une image, puis confirmer avec entrer) -->
+    <div class="row" id="roleSelection" style="display:none;">
+          <img class="mystiologue_petit" src="../assets/UI/roles/petit/mystiologue_petit.png" alt="Mystiologue">
+          <img class="verdamicien_petit" src="../assets/UI/roles/petit/verdamicien_petit.png" alt="Verdamicien">
+          <img class="technoforgeron_petit" src="../assets/UI/roles/petit/technoforgeron_petit.png" alt="Technoforgeron">
+    </div>
+    
 </body>
 
 <script src="../script/typewritter.js"></script>
