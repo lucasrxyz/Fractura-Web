@@ -10,17 +10,13 @@
 
 <body>
   <div>
-    <div>
+    <div style="margin-bottom:280px;">
 
         <div class="flogo">
-          <img src="assets/images/fractura_title.png">
+          <img src="assets/images/taro_adventure_title.png">
         </div>
 
-        <div class="backimg">
-            <img src="assets/images/temp_background.png">
-        </div>
-
-        <div style="margin-left:50px;">
+        <div style="margin-left:90px;" class="taille">
             <div class="btnplay" id="btnplay" onclick="newGame()">
               <img class="btnImg" src="assets/UI/play.png">
             </div>
@@ -34,45 +30,10 @@
     </div>
   </div>
 
-  <div id="fadeOverlay"></div>
+  <img src="assets/images/titlescreen/titlescreen_appuyer_touche.png" id="fadeOverlay" class="active">
+  <div id="fadeOutOverlay"></div>
 
-  <script>
-    function loadGame() {
-      alert("Chargement de la sauvegarde...");
-    }
+  <script src="script/script_affichages.js"></script>
 
-    function newGame() {
-      const overlay = document.getElementById("fadeOverlay");
-      overlay.classList.add("active");
-      setTimeout(() => {
-        window.location.href = "html utilitaire/loading.html";
-      }, 1000); // 1s pour laisser le temps au fondu
-    }
-
-    function options() {
-      alert("Options en développement...");
-    }
-
-    const buttons = [
-    {btnId: "btnplay", default: "assets/UI/play.png", hover: "assets/UI/play_hover.png"},
-    {btnId: "NewGame", default: "assets/UI/charger.png", hover: "assets/UI/charger_hover.png"},
-    {btnId: "Settings", default: "assets/UI/reglages.png", hover: "assets/UI/reglages_hover.png"}
-    ];
-
-    buttons.forEach(item => {
-        const btn = document.getElementById(item.btnId);
-        const img = btn.querySelector("img");
-
-    btn.addEventListener("mouseenter", () => {
-        img.src = item.hover;
-    });
-
-    btn.addEventListener("mouseleave", () => {
-     img.src = item.default;
-    });
-});
-
-
-  </script>
 </body>
 </html>

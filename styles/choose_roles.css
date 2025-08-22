@@ -1,4 +1,4 @@
-.row {
+translateX.row {
     display: flex;
     justify-content: center;
     gap: 60px; /* espace entre les images */

@@ -1,85 +1,132 @@
-   /* Reset */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+/* Reset */
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-    body {
-      font-family: "Minecraft", monospace;
-      /* background-image: url("../assets/images/temp_background.png"); */
-      background-size: cover;      /* l'image couvre tout le menu */
-      background-position: center; /* centrée */
-      background-repeat: no-repeat;
-      display: flex;
-      align-items: center;
-      height: 100vh;
-      image-rendering: pixelated; /* évite le flou */
-      image-rendering: crisp-edges;
+body {
+  font-family: "Minecraft", monospace;
+  background-image: url("../assets/images/titlescreen/titlescreen_bg.png");
+  background-size: cover;      /* l'image couvre tout le menu */
+  background-position: center; /* centrée */
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  height: 100vh;
+  image-rendering: pixelated; /* évite le flou */
+  image-rendering: crisp-edges;
 
-      background-color: #04000A;
-    }
+  background-color: #04000A;
+}
 
-    h1 {
-      font-size: 48px;
-      color: #333;
-      margin-bottom: 40px;
-      text-shadow: 2px 2px #888;
-    }
+h1 {
+  font-size: 48px;
+  color: #333;
+  margin-bottom: 40px;
+  text-shadow: 2px 2px #888;
+}
 
-    .btn {
-      display: block;
-      margin: 15px auto;
-      font-size: 18px;
-      cursor: pointer;
+.btn {
+  display: block;
+  margin: 15px auto;
+  font-size: 18px;
+  cursor: pointer;
 
-      background-color: #e5c5eb;
-      border-color: #D4A5B7;
-      color: #D683CF;
-    }
+  background-color: #e5c5eb;
+  border-color: #D4A5B7;
+  color: #D683CF;
+}
 
-    .btnplay {
-      display: block;
-      margin: 30px auto;
-      font-size: 18px;
-      cursor: pointer;
-      border-color: #D4A5B7;
-      color: #D683CF;
-      transition: 0.25s ease-in-out;
-    }
-    .btnplay img {
-        width: 300px;         
-        height: auto;
-        image-rendering: pixelated;
-        image-rendering: crisp-edges;
-        transition: 0.25s ease-in-out;
-    }
+.btnplay {
+  display: block;
+  margin: 30px auto;
+  font-size: 18px;
+  cursor: pointer;
+  border-color: #D4A5B7;
+  color: #D683CF;
+  transition: 0.25s ease-in-out;
+  transform: translateX(-100vw);
+  transition: transform 0.5s cubic-bezier( 0.64, 0.29, 0.05, 0.96 );
+}
+.btnplay img {
+    width: 300px;         
+    height: auto;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    transition: 0.25s cubic-bezier( 0.64, 0.29, 0.05, 0.96 );
+}
 
-    .btnplay img:hover {
-        transition: 0.15s ease-out;
-        margin-left:5px;
-    }
+.btnplay img:hover {
+    transition: 0.15s ease-out;
+    margin-left:5px;
+}
 
-    .btn:hover {
-      background: #b56576;
-      transform: scale(1.05);
-    }
+.btn:hover {
+  background: #b56576;
+  transform: scale(1.05);
+}
 
-    /* Canvas test sprite */
-    canvas {
-      display: block;
-      margin: 20px auto;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-    }
+/* Canvas test sprite */
+canvas {
+  display: block;
+  margin: 20px auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
 
-    .flogo img {
-        width: 600px;         
-        height: auto;
-        image-rendering: pixelated;
-        image-rendering: crisp-edges;
-    }
-    
-    .backimg img {
-        position:absolute;
-        width:1000px;
-        float:right;
-        margin-left:800px;
-        margin-top:-200px;
-    }
+.flogo img {
+    width: 600px;         
+    height: auto;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    margin-left:35px;
+    padding-bottom:105px;
+}
+
+.flogo {
+  transform: translateX(-100vw);
+  transition: transform 0.5s ease-out;
+}
+
+.backimg img {
+    position:absolute;
+    width:1000px;
+}
+
+.taille img {
+    width:75%
+}
+
+.appear {
+  transform: translateX(0) !important;
+}
+
+#fadeOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#fadeOverlay.active {
+  opacity: 1;
+}
+
+#fadeOutOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#fadeOutOverlay.active {
+  opacity: 1;
+}
