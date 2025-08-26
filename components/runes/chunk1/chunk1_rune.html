@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Fractura - Map</title>
+  <style>
+    body {
+      margin: 0;
+      background: #489BFF;
+      overflow: hidden;
+      color: white;
+      font-family: cutepixel;
+    }
+
+    .map-layer {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* Joueur */
+    #player {
+      position: absolute;
+      width: 16px;
+      height: 32px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: red; /* par défaut face sud */
+      z-index: 6;
+    }
+
+    /* HUD coordonnées */
+    #coords {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      font-size: 32px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+  <img src="1_ground.png" class="map-layer" style="z-index: 1;">
+  <img src="2_plantes_fillers.png" class="map-layer" style="z-index: 2;">
+  <img src="3_water.png" class="map-layer" style="z-index: 3;">
+  <img src="4_chemin_parrois.png" class="map-layer" style="z-index: 4;">
+  <img src="5_rochers_pilliers.png" class="map-layer" style="z-index: 5;">
+  <img src="6_herbe.png" class="map-layer" style="z-index: 6;">
+  <img src="7_arbres_bush.png" class="map-layer" style="z-index: 7;">
+  <img src="8_herbe_dessus.png" class="map-layer" style="z-index: 8;">
+
+  <!-- Joueur -->
+  <div id="player"></div>
+
+  <!-- HUD coordonnées -->
+  <div id="coords">X: 0 | Y: 0</div>
+
+  <script>
+    const player = document.getElementById("player");
+    const coords = document.getElementById("coords");
+
+    let posX = window.innerWidth / 2;
+    let posY = window.innerHeight / 2;
+    const speed = 0.5;
+
+    // état des touches
+    const keys = { w: false, a: false, s: false, d: false };
+
+    const colors = {
+      w: "blue",   // nord
+      s: "red",    // sud
+      a: "green",  // ouest
+      d: "yellow"  // est
+    };
+
+    document.addEventListener("keydown", (e) => {
+      const key = e.key.toLowerCase();
+      if (keys.hasOwnProperty(key)) {
+        keys[key] = true;
+      }
+    });
+
+    document.addEventListener("keyup", (e) => {
+      const key = e.key.toLowerCase();
+      if (keys.hasOwnProperty(key)) {
+        keys[key] = false;
+      }
+    });
+
+    function gameLoop() {
+        let moved = false;
+        let nextX = posX;
+        let nextY = posY;
+        
+        if (keys.w) { nextY -= speed; player.style.background = colors.w; moved = true; }
+        if (keys.s) { nextY += speed; player.style.background = colors.s; moved = true; }
+        if (keys.a) { nextX -= speed; player.style.background = colors.a; moved = true; }
+        if (keys.d) { nextX += speed; player.style.background = colors.d; moved = true; }
+
+        // appliquer collision avant de mettre à jour posX/posY
+        [nextX, nextY] = checkHitbox(nextX, nextY);
+
+        posX = nextX;
+        posY = nextY;
+        
+        player.style.left = posX + "px";
+        player.style.top = posY + "px";
+
+        checkDepth(); // gestion du z-index
+        coords.textContent = `X: ${Math.round(posX)} | Y: ${Math.round(posY)}`;
+        
+        requestAnimationFrame(gameLoop);
+    }
+
+
+    let showZones = false; // flag pour afficher/masquer les zones
+    let showHitboxes = false; // flag pour afficher/masquer les hitboxes
+
+    // appuyer sur F1 pour afficher/masquer les zones
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "F1") {
+            showZones = !showZones; // toggle on/off
+            e.preventDefault(); // empêche l'action par défaut de F1 (aide)
+            checkDepth(); // mettre à jour l'affichage
+        }
+    })
+    // appuyer sur F2 pour afficher/masquer les hitboxes
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "F2") {
+            showHitboxes = !showHitboxes;
+            e.preventDefault();
+            checkHitbox(); // met à jour affichage
+        }
+    });
+    // vérifier la profondeur du player
+    function checkDepth() {
+    const zones = [
+        { x1: 1034, x2: 1178, y1: 545, y2: 607 },
+        { x1: 1260, x2: 1366, y1: 395, y2: 449 },
+        { x1: 804, x2: 878, y1: 800, y2: 845 },
+        { x1: 506, x2: 590, y1: 753, y2: 795 },
+        { x1: 454, x2: 630, y1: 387, y2: 415 },
+    ];
+
+    const rocks = [
+        { x1: 1070, x2: 1174, y1: 719, y2: 767 },
+        { x1: 900, x2: 986, y1: 863, y2: 899 },
+        { x1: 360, x2: 472, y1: 809, y2: 861 },
+        { x1: 310, x2: 378, y1: 855, y2: 889 },
+        { x1: 220, x2: 288, y1: 653, y2: 725 },
+        { x1: 505, x2: 575, y1: 415, y2: 435 },
+        { x1: 948, x2: 1029, y1: 560, y2: 586 },
+        { x1: 1062, x2: 1187, y1: 281, y2: 396 },
+        { x1: 831, x2: 924, y1: 40, y2: 121 },
+        { x1: 233, x2: 329, y1: 70, y2: 184 },
+    ];
+
+    // supprimer les anciens rectangles si déjà créés
+    document.querySelectorAll(".zone-visual").forEach(el => el.remove());
+
+    let inZone = false;
+    let inRock = false;
+
+    // zones bush/arbre
+    for (const { x1, x2, y1, y2 } of zones) {
+        if (showZones) {
+            const div = document.createElement("div");
+            div.classList.add("zone-visual");
+            div.style.position = "absolute";
+            div.style.left = x1 + "px";
+            div.style.top = y1 + "px";
+            div.style.width = (x2 - x1) + "px";
+            div.style.height = (y2 - y1) + "px";
+            div.style.backgroundColor = "rgba(255,0,0,0.3)";
+            div.style.pointerEvents = "none";
+            div.style.zIndex = 999;
+            document.body.appendChild(div);
+        }
+
+        if (posX >= x1 && posX <= x2 && posY >= y1 && posY <= y2) {
+            inZone = true;
+        }
+    }
+
+    // zones rocks
+    for (const { x1, x2, y1, y2 } of rocks) {
+        if (showZones) {
+            const div = document.createElement("div");
+            div.classList.add("zone-visual");
+            div.style.position = "absolute";
+            div.style.left = x1 + "px";
+            div.style.top = y1 + "px";
+            div.style.width = (x2 - x1) + "px";
+            div.style.height = (y2 - y1) + "px";
+            div.style.backgroundColor = "rgba(0,0,139,0.3)";
+            div.style.pointerEvents = "none";
+            div.style.zIndex = 999;
+            document.body.appendChild(div);
+        }
+
+        if (posX >= x1 && posX <= x2 && posY >= y1 && posY <= y2) {
+            inRock = true;
+        }
+    }
+
+    // appliquer le z-index selon la priorité
+    if (inZone) {
+        player.style.zIndex = 7;
+    } else if (inRock) {
+        player.style.zIndex = 4;
+    } else {
+        player.style.zIndex = 6;
+    }
+}
+    function checkHitbox(x, y) {
+        const hitzones = [
+            { x1: 1082, x2: 1178, y1: 383, y2: 427 },
+            { x1: 826, x2: 861, y1: 817, y2: 824 },
+            { x1: 1090, x2: 1169, y1: 743, y2: 786 },
+        ];
+
+        // supprimer anciens hitboxes si présents
+        document.querySelectorAll(".hitbox-visual").forEach(el => el.remove());
+
+        for (const { x1, x2, y1, y2 } of hitzones) {
+            // afficher la zone si showHitboxes
+            if (showHitboxes) {
+                const div = document.createElement("div");
+                div.classList.add("hitbox-visual");
+                div.style.position = "absolute";
+                div.style.left = x1 + "px";
+                div.style.top = y1 + "px";
+                div.style.width = (x2 - x1) + "px";
+                div.style.height = (y2 - y1) + "px";
+                div.style.border = "3px solid white";
+                div.style.pointerEvents = "none";
+                div.style.zIndex = 1000;
+                document.body.appendChild(div);
+            }
+
+            // collision
+            if (x + player.offsetWidth > x1 && x < x2 &&
+                y + player.offsetHeight > y1 && y < y2) {
+
+                if (keys.a) x = x2;
+                if (keys.d) x = x1 - player.offsetWidth;
+                if (keys.w) y = y2;
+                if (keys.s) y = y1 - player.offsetHeight;
+            }
+        }
+
+        return [x, y];
+    }
+
+    gameLoop();
+  </script>
+</body>
+</html>
