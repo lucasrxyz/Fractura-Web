@@ -24,18 +24,6 @@
       image-rendering: crisp-edges;
     }
 
-    /* Joueur */
-    #player {
-      position: absolute;
-      width: 16px;
-      height: 32px;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: red; /* par défaut face sud */
-      z-index: 6;
-    }
-
     /* HUD coordonnées */
     #coords {
       position: absolute;
@@ -45,6 +33,20 @@
       padding: 4px 8px;
       border-radius: 4px;
       z-index: 999;
+    }
+
+    #player {
+      position: absolute;
+      width: 13px;   /* taille originale de la frame */
+      height: 18px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(4); /* ×3 sans flou */
+      transform-origin: center;
+      background-repeat: no-repeat;
+      background-color:rgba(0,0,139,0.0); /* changer le 0.0 en 0.3 pour voir hitbox du player */
+      image-rendering: pixelated; /* pas de flou */
+      z-index: 6;
     }
   </style>
 </head>
@@ -70,55 +72,74 @@
 
     let posX = window.innerWidth / 2;
     let posY = window.innerHeight / 2;
-    const speed = 1;
+    const speed = 2;
 
     // état des touches
     const keys = { w: false, a: false, s: false, d: false };
 
-    const colors = {
-      w: "blue",   // nord
-      s: "red",    // sud
-      a: "green",  // ouest
-      d: "yellow"  // est
+    // chemins vers tes images pour chaque direction
+    const sprites = {
+      w: "../../../assets/player/W.png",    // nord
+      s: "../../../assets/player/S.png",    // sud
+      a: "../../../assets/player/A.png",    // ouest
+      d: "../../../assets/player/D.png",    // est
+      wa: "../../../assets/player/WA.png",  // nord-ouest
+      wd: "../../../assets/player/WD.png",  // nord-est
+      sa: "../../../assets/player/SA.png",  // sud-ouest
+      sd: "../../../assets/player/SD.png"   // sud-est
     };
 
     document.addEventListener("keydown", (e) => {
       const key = e.key.toLowerCase();
-      if (keys.hasOwnProperty(key)) {
-        keys[key] = true;
-      }
+      if (keys.hasOwnProperty(key)) keys[key] = true;
     });
 
     document.addEventListener("keyup", (e) => {
       const key = e.key.toLowerCase();
-      if (keys.hasOwnProperty(key)) {
-        keys[key] = false;
-      }
+      if (keys.hasOwnProperty(key)) keys[key] = false;
     });
 
+    function getDirection() {
+      if (keys.w && keys.a) return "wa";
+      if (keys.w && keys.d) return "wd";
+      if (keys.s && keys.a) return "sa";
+      if (keys.s && keys.d) return "sd";
+      if (keys.w) return "w";
+      if (keys.s) return "s";
+      if (keys.a) return "a";
+      if (keys.d) return "d";
+      return null;
+    }
+
     function gameLoop() {
-        let moved = false;
-        let nextX = posX;
-        let nextY = posY;
-        
-        if (keys.w) { nextY -= speed; player.style.background = colors.w; moved = true; }
-        if (keys.s) { nextY += speed; player.style.background = colors.s; moved = true; }
-        if (keys.a) { nextX -= speed; player.style.background = colors.a; moved = true; }
-        if (keys.d) { nextX += speed; player.style.background = colors.d; moved = true; }
+      let moved = false;
+      let nextX = posX;
+      let nextY = posY;
 
-        // appliquer collision avant de mettre à jour posX/posY
-        [nextX, nextY] = checkHitbox(nextX, nextY);
+      if (keys.w) { nextY -= speed; moved = true; }
+      if (keys.s) { nextY += speed; moved = true; }
+      if (keys.a) { nextX -= speed; moved = true; }
+      if (keys.d) { nextX += speed; moved = true; }
 
-        posX = nextX;
-        posY = nextY;
-        
-        player.style.left = posX + "px";
-        player.style.top = posY + "px";
+      // appliquer collision avant de mettre à jour posX/posY
+      [nextX, nextY] = checkHitbox(nextX, nextY);
 
-        checkDepth(); // gestion du z-index
-        coords.textContent = `X: ${Math.round(posX)} | Y: ${Math.round(posY)}`;
-        
-        requestAnimationFrame(gameLoop);
+      posX = nextX;
+      posY = nextY;
+
+      player.style.left = posX + "px";
+      player.style.top = posY + "px";
+
+      // choisir le sprite en fonction des touches
+      const dir = getDirection();
+      if (dir) {
+        player.style.backgroundImage = `url(${sprites[dir]})`;
+      }
+
+      checkDepth(); // gestion du z-index
+      coords.textContent = `X: ${Math.round(posX)} | Y: ${Math.round(posY)}`;
+
+      requestAnimationFrame(gameLoop);
     }
 
 
@@ -226,8 +247,18 @@
         { x1: 1082, x2: 1178, y1: 383, y2: 427 },
         { x1: 826, x2: 861, y1: 817, y2: 824 },
         { x1: 1090, x2: 1169, y1: 743, y2: 786 },
-        { x1: 924, x2: 1383, y1: 13, y2: 390 },
+        { x1: 925, x2: 1383, y1: 13, y2: 397 },
         { x1: 535, x2: 928, y1: 0, y2: 102 },
+        { x1: 0, x2: 248, y1: 0, y2: 263 },
+        { x1: 246, x2: 562, y1: 259, y2: 380 },
+        { x1: 392, x2: 460, y1: 380, y2: 478 },
+        { x1: 460, x2: 634, y1: 468, y2: 589 },
+        { x1: 436, x2: 532, y1: 575, y2: 707 },
+        { x1: 158, x2: 524, y1: 597, y2: 707 },
+        { x1: 158, x2: 218, y1: 597, y2: 1000 },
+        // a droite
+        { x1: 1377, x2: 1418, y1: 337, y2: 775 },
+        { x1: 1276, x2: 1418, y1: 767, y2: 1000 },
     ];
 
     // supprimer anciens hitboxes
