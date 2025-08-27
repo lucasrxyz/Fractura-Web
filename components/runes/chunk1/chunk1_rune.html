@@ -70,7 +70,7 @@
 
     let posX = window.innerWidth / 2;
     let posY = window.innerHeight / 2;
-    const speed = 0.5;
+    const speed = 1;
 
     // état des touches
     const keys = { w: false, a: false, s: false, d: false };
@@ -127,7 +127,7 @@
 
     // appuyer sur F1 pour afficher/masquer les zones
     document.addEventListener("keydown", (e) => {
-        if (e.key === "F1") {
+        if (e.key === "F6") {
             showZones = !showZones; // toggle on/off
             e.preventDefault(); // empêche l'action par défaut de F1 (aide)
             checkDepth(); // mettre à jour l'affichage
@@ -135,7 +135,7 @@
     })
     // appuyer sur F2 pour afficher/masquer les hitboxes
     document.addEventListener("keydown", (e) => {
-        if (e.key === "F2") {
+        if (e.key === "F7") {
             showHitboxes = !showHitboxes;
             e.preventDefault();
             checkHitbox(); // met à jour affichage
@@ -222,44 +222,55 @@
     }
 }
     function checkHitbox(x, y) {
-        const hitzones = [
-            { x1: 1082, x2: 1178, y1: 383, y2: 427 },
-            { x1: 826, x2: 861, y1: 817, y2: 824 },
-            { x1: 1090, x2: 1169, y1: 743, y2: 786 },
-        ];
+    const hitzones = [
+        { x1: 1082, x2: 1178, y1: 383, y2: 427 },
+        { x1: 826, x2: 861, y1: 817, y2: 824 },
+        { x1: 1090, x2: 1169, y1: 743, y2: 786 },
+        { x1: 924, x2: 1383, y1: 13, y2: 390 },
+        { x1: 535, x2: 928, y1: 0, y2: 102 },
+    ];
 
-        // supprimer anciens hitboxes si présents
-        document.querySelectorAll(".hitbox-visual").forEach(el => el.remove());
+    // supprimer anciens hitboxes
+    document.querySelectorAll(".hitbox-visual").forEach(el => el.remove());
 
-        for (const { x1, x2, y1, y2 } of hitzones) {
-            // afficher la zone si showHitboxes
-            if (showHitboxes) {
-                const div = document.createElement("div");
-                div.classList.add("hitbox-visual");
-                div.style.position = "absolute";
-                div.style.left = x1 + "px";
-                div.style.top = y1 + "px";
-                div.style.width = (x2 - x1) + "px";
-                div.style.height = (y2 - y1) + "px";
-                div.style.border = "3px solid white";
-                div.style.pointerEvents = "none";
-                div.style.zIndex = 1000;
-                document.body.appendChild(div);
-            }
+    const pw = player.offsetWidth;
+    const ph = player.offsetHeight;
 
-            // collision
-            if (x + player.offsetWidth > x1 && x < x2 &&
-                y + player.offsetHeight > y1 && y < y2) {
+    let newX = x;
+    let newY = y;
 
-                if (keys.a) x = x2;
-                if (keys.d) x = x1 - player.offsetWidth;
-                if (keys.w) y = y2;
-                if (keys.s) y = y1 - player.offsetHeight;
-            }
+    // ----- Vérif axe X -----
+    for (const { x1, x2, y1, y2 } of hitzones) {
+        if (showHitboxes) {
+            const div = document.createElement("div");
+            div.classList.add("hitbox-visual");
+            div.style.position = "absolute";
+            div.style.left = x1 + "px";
+            div.style.top = y1 + "px";
+            div.style.width = (x2 - x1) + "px";
+            div.style.height = (y2 - y1) + "px";
+            div.style.border = "3px solid white";
+            div.style.pointerEvents = "none";
+            div.style.zIndex = 1000;
+            document.body.appendChild(div);
         }
 
-        return [x, y];
+        if (newX + pw > x1 && newX < x2 && posY + ph > y1 && posY < y2) {
+            if (keys.a) newX = x2;        // bloque à gauche
+            if (keys.d) newX = x1 - pw;   // bloque à droite
+        }
     }
+
+    // ----- Vérif axe Y (avec X déjà corrigé) -----
+    for (const { x1, x2, y1, y2 } of hitzones) {
+        if (newX + pw > x1 && newX < x2 && newY + ph > y1 && newY < y2) {
+            if (keys.w) newY = y2;        // bloque en haut
+            if (keys.s) newY = y1 - ph;   // bloque en bas
+        }
+    }
+
+    return [newX, newY];
+}
 
     gameLoop();
   </script>
