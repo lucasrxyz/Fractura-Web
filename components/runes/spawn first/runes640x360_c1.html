@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fractura - Map (caméra + collisions)</title>
+  <style>
+    :root{
+      /* Taille NATIVE de la map (chaque image fait 640x360) */
+      --MAP-W: 640;      /* en px (valeur numérique) */
+      --MAP-H: 360;      /* en px (valeur numérique) */
+      --SCALE: 3;        /* zoom visuel x4 (pixel art net) */
+
+      /* taille du joueur en coordonnées NATIVE de la map */
+      --PLAYER-W: 16;    /* ajuste selon ton sprite */
+      --PLAYER-H: 24;
+
+      /* vitesse (px/seconde dans l'espace NATIVE) */
+      --SPEED: 80;
+      --RUN-MULT: 2.5;   /* espace = courir */
+    }
+
+    *{ box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; background:#3a86ff; font-family: system-ui, sans-serif; }
+
+    /* Viewport = fenêtre caméra. On masque ce qui dépasse. */
+    #viewport{
+      position: fixed; inset: 0; overflow: hidden; background:#3a86ff;
+    }
+
+    /* Le monde (toutes les couches + joueur) vit dans #world. 
+       On le translate pour suivre le joueur puis on le scale x4 pour le pixel art. */
+    #world{
+      position: absolute; left: 0; top: 0;
+      width: calc(var(--MAP-W) * 1px);
+      height: calc(var(--MAP-H) * 1px);
+      image-rendering: pixelated;           /* crucial pour neteté */
+      image-rendering: crisp-edges;
+      transform-origin: 0 0;                /* les translations sont dans l'espace NATIVE */
+      will-change: transform;
+    }
+
+    /* Une couche = une image superposée, en coordonnées natives. */
+    .map-layer{
+      position: absolute; left: 0; top: 0;
+      width: calc(var(--MAP-W) * 1px);
+      height: calc(var(--MAP-H) * 1px);
+      image-rendering: pixelated; object-fit: contain;
+      pointer-events: none;
+    }
+
+    /* Joueur : un div sprite, taille en px NATIVE, photo collée en background. */
+    #player{
+      position: absolute;
+      width: calc(var(--PLAYER-W) * 1px);
+      height: calc(var(--PLAYER-H) * 1px);
+      background-repeat: no-repeat; background-size: 100% 100%;
+      image-rendering: pixelated; will-change: transform;
+      /* z-index par défaut entre les couches 4 et 7, modifié dynamiquement */
+      z-index: 6;
+    }
+
+    /* HUD coordonnées */
+    #coords{
+      position: fixed; left: 12px; bottom: 12px; padding: 6px 10px;
+      background: rgba(0,0,0,.5); color: #fff; border-radius: 8px; font-weight: 600;
+      font-size: 14px; letter-spacing: .3px; backdrop-filter: blur(4px);
+      user-select: none;
+    }
+
+    /* Overlays debug (zones / hitboxes) créés par JS */
+    .zone-visual, .rock-visual, .hitbox-visual{
+      position: absolute; left: 0; top: 0; pointer-events: none; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.6);
+    }
+    .zone-visual{ background: rgba(255,0,0,.35); }
+    .rock-visual{ background: rgba(0,0,139,.35); }
+    .hitbox-visual{ border: 2px solid #fff; background: rgba(0,0,0,.25); }
+
+    #mouseCoords{
+      position: fixed; left: 12px; bottom: 52px; padding: 6px 10px;
+      background: rgba(0,0,0,.5); color: #fff; border-radius: 8px; font-weight: 600;
+      font-size: 14px; letter-spacing: .3px; backdrop-filter: blur(4px);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewport">
+    <div id="world">
+      <!-- ORDRE des couches = profondeur (z-index inline conservé si besoin fin) -->
+      <img src="layers/1_herbe+shadows.png" class="map-layer" style="z-index:1;" />
+      <img src="layers/2_eau.png" class="map-layer" style="z-index:2;" />
+      <img src="layers/3_barrieres_mur.png" class="map-layer" style="z-index:3;" />
+      <img src="layers/4_props_herbe.png" class="map-layer" style="z-index:4;" />
+      <img src="layers/5_pave_chemin.png" class="map-layer" style="z-index:5;" />
+      <img src="layers/6_props_rock.png" class="map-layer" style="z-index:6;" />
+      <img src="layers/7_props_arbres1.png" class="map-layer" style="z-index:7;" />
+      <img src="layers/8_props_bush.png" class="map-layer" style="z-index:8;" />
+      <img src="layers/9_props_arbres2.png" class="map-layer" style="z-index:9;" />
+      <img src="layers/10_hautes_herbes.png" class="map-layer" style="z-index:10;" />
+      <img src="layers/11_pilliers.png" class="map-layer" style="z-index:11;" />
+      <img src="layers/12_eau_dessus.png" class="map-layer" style="z-index:12;" />
+      <img src="layers/13_rembardes_eau.png" class="map-layer" style="z-index:13;" />
+
+      <!-- Joueur -->
+      <div id="player"></div>
+    </div>
+  </div>
+
+  <!-- HUD coordonnées -->
+  <div id="coords">X: 0 | Y: 0</div>
+  <div id="mouseCoords">Mouse: X: 0 | Y: 0</div>
+
+<script>
+  // ==== Références DOM
+  const viewport = document.getElementById('viewport');
+  const world    = document.getElementById('world');
+  const player   = document.getElementById('player');
+  const coords   = document.getElementById('coords');
+  const mouseCoords = document.getElementById('mouseCoords');
+
+  // ==== Constantes / paramètres
+  const MAP_W = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--MAP-W'));
+  const MAP_H = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--MAP-H'));
+
+  // ⚡ SCALE devient une variable modifiable
+  let SCALE = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--SCALE')) || 3;
+
+  const PLAYER_W = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--PLAYER-W'));
+  const PLAYER_H = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--PLAYER-H'));
+
+  const BASE_SPEED = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--SPEED'));
+  const RUN_MULT   = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--RUN-MULT'));
+
+  // ==== Etat joueur (coordonnées dans l'espace NATIVE 640x360)
+  let posX = MAP_W / 2 - PLAYER_W / 2; // départ centre
+  let posY = MAP_H / 2 - PLAYER_H / 2;
+  let vx = 0, vy = 0;                   // vitesses courantes
+
+  // ==== Clavier
+  const keys = { w:false, a:false, s:false, d:false, run:false };
+  document.addEventListener('keydown', (e)=>{
+    const k = e.key.toLowerCase();
+    if(k==='w'||k==='a'||k==='s'||k==='d'){ keys[k]=true; }
+    if(e.key===' ') { keys.run = true; e.preventDefault(); }
+
+    // ⚡ Zoom dynamique avec F8
+    if(e.key === "F8"){
+      if (SCALE === 2) SCALE = 3;
+      else if (SCALE === 3) SCALE = 4;
+      else SCALE = 2;
+      applyCamera(); // recalcule direct la caméra
+    }
+  });
+  document.addEventListener('keyup', (e)=>{
+    const k = e.key.toLowerCase();
+    if(k==='w'||k==='a'||k==='s'||k==='d'){ keys[k]=false; }
+    if(e.key===' ') { keys.run = false; e.preventDefault(); }
+  });
+
+  viewport.addEventListener("mousemove", (e) => {
+      const rect = viewport.getBoundingClientRect();
+      const vw = viewport.clientWidth;
+      const vh = viewport.clientHeight;
+      const visW = vw / SCALE;
+      const visH = vh / SCALE;
+
+      // Position caméra actuelle
+      let camX = (posX + PLAYER_W/2) - visW/2;
+      let camY = (posY + PLAYER_H/2) - visH/2;
+      camX = Math.max(0, Math.min(MAP_W - visW, camX));
+      camY = Math.max(0, Math.min(MAP_H - visH, camY));
+
+      // Coord curseur en pixels viewport
+      const mouseXpx = e.clientX - rect.left;
+      const mouseYpx = e.clientY - rect.top;
+
+      // Conversion en coords natives
+      const worldX = camX + mouseXpx / SCALE;
+      const worldY = camY + mouseYpx / SCALE;
+
+      mouseCoords.textContent = `Mouse: X: ${Math.round(worldX)} | Y: ${Math.round(worldY)}`;
+    });
+
+
+  // ==== Sprites (remplace par tes chemins)
+  const sprites = {
+    w: "../../../assets/player/W.png",
+    s: "../../../assets/player/S.png",
+    a: "../../../assets/player/A.png",
+    d: "../../../assets/player/D.png",
+    wa:"../../../assets/player/WA.png",
+    wd:"../../../assets/player/WD.png",
+    sa:"../../../assets/player/SA.png",
+    sd:"../../../assets/player/SD.png"
+  };
+
+  function getDirection(){
+    if(keys.w && keys.a) return 'wa';
+    if(keys.w && keys.d) return 'wd';
+    if(keys.s && keys.a) return 'sa';
+    if(keys.s && keys.d) return 'sd';
+    if(keys.w) return 'w';
+    if(keys.s) return 's';
+    if(keys.a) return 'a';
+    if(keys.d) return 'd';
+    return null;
+  }
+
+  // ==== Debug overlays
+  let showZones=false, showHitboxes=false;
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='F6'){ showZones=!showZones; e.preventDefault(); drawDepthOverlays(); }
+    if(e.key==='F7'){ showHitboxes=!showHitboxes; e.preventDefault(); drawHitboxOverlays(); }
+  });
+
+  // ==== Zones profondeur & rochers (exemple)
+  const zones = [
+        { x1: 375, x2: 408, y1: 255, y2: 275 },
+        { x1: 463, x2: 495, y1: 255, y2: 275 },
+        { x1: 455, x2: 473, y1: 216, y2: 222 },
+    ];
+
+  const rocks = [
+    ];
+
+  // ==== Hitboxes
+  const hitzones = [
+        { x1: 382, x2: 403, y1: 275, y2: 280 },
+        { x1: 470, x2: 490, y1: 275, y2: 280 },
+        { x1: 460, x2: 468, y1: 218.5, y2: 218.6 },
+        { x1: 365, x2: 382, y1: 234, y2: 235 },
+        { x1: 282, x2: 356, y1: 168, y2: 293 },
+    ];
+
+  // Utilitaire conversion résolution
+  function scaleRect(r, fromW, fromH, toW=MAP_W, toH=MAP_H){
+    const sx = toW / fromW, sy = toH / fromH;
+    return { x1: r.x1*sx, x2: r.x2*sx, y1: r.y1*sy, y2: r.y2*sy };
+  }
+
+  // ==== Dessin overlays debug
+  function clearOverlays(){
+    world.querySelectorAll('.zone-visual,.rock-visual,.hitbox-visual').forEach(el=>el.remove());
+  }
+
+  function drawDepthOverlays(){
+    world.querySelectorAll('.zone-visual,.rock-visual').forEach(el=>el.remove());
+    if(!showZones) return;
+    zones.forEach((r,i)=>{
+      const d=document.createElement('div');
+      d.className='zone-visual';
+      d.style.left=r.x1+'px'; d.style.top=r.y1+'px';
+      d.style.width=(r.x2-r.x1)+'px'; d.style.height=(r.y2-r.y1)+'px';
+      d.style.zIndex=999; d.textContent=i+1; d.style.fontSize='10px';
+      world.appendChild(d);
+    });
+    rocks.forEach((r,i)=>{
+      const d=document.createElement('div');
+      d.className='rock-visual';
+      d.style.left=r.x1+'px'; d.style.top=r.y1+'px';
+      d.style.width=(r.x2-r.x1)+'px'; d.style.height=(r.y2-r.y1)+'px';
+      d.style.zIndex=999; d.textContent=i+1; d.style.fontSize='10px';
+      world.appendChild(d);
+    });
+  }
+
+  function drawHitboxOverlays(){
+    world.querySelectorAll('.hitbox-visual').forEach(el=>el.remove());
+    if(!showHitboxes) return;
+    hitzones.forEach((r,i)=>{
+      const d=document.createElement('div');
+      d.className='hitbox-visual';
+      d.style.left=r.x1+'px'; d.style.top=r.y1+'px';
+      d.style.width=(r.x2-r.x1)+'px'; d.style.height=(r.y2-r.y1)+'px';
+      d.style.zIndex=1000; d.textContent=i+1; d.style.fontSize='11px';
+      world.appendChild(d);
+    });
+  }
+
+  // ==== Profondeur (z-index du player)
+  function applyDepth(){
+    let inZone=false, inRock=false;
+    for(const r of zones){
+      if(posX+PLAYER_W/2 >= r.x1 && posX+PLAYER_W/2 <= r.x2 && posY+PLAYER_H >= r.y1 && posY+PLAYER_H <= r.y2){
+        inZone=true; break;
+      }
+    }
+    if(!inZone){
+      for(const r of rocks){
+        if(posX+PLAYER_W/2 >= r.x1 && posX+PLAYER_W/2 <= r.x2 && posY+PLAYER_H >= r.y1 && posY+PLAYER_H <= r.y2){
+          inRock=true; break;
+        }
+      }
+    }
+    if(inZone)      player.style.zIndex = 5;
+    else if(inRock) player.style.zIndex = 4;
+    else            player.style.zIndex = 6;
+  }
+
+  // ==== Collisions rectangulaires
+  function resolveCollisions(nextX, nextY){
+    let newX = nextX, newY = nextY;
+    for(const r of hitzones){
+      if(newX + PLAYER_W > r.x1 && newX < r.x2 && posY + PLAYER_H > r.y1 && posY < r.y2){
+        if(keys.a) newX = r.x2;
+        if(keys.d) newX = r.x1 - PLAYER_W;
+      }
+    }
+    for(const r of hitzones){
+      if(newX + PLAYER_W > r.x1 && newX < r.x2 && newY + PLAYER_H > r.y1 && newY < r.y2){
+        if(keys.w) newY = r.y2;
+        if(keys.s) newY = r.y1 - PLAYER_H;
+      }
+    }
+    return [newX, newY];
+  }
+
+  // ==== Caméra
+  function applyCamera(){
+    const vw = viewport.clientWidth;
+    const vh = viewport.clientHeight;
+    const visW = vw / SCALE;
+    const visH = vh / SCALE;
+
+    let camX = (posX + PLAYER_W/2) - visW/2;
+    let camY = (posY + PLAYER_H/2) - visH/2;
+
+    camX = Math.max(0, Math.min(MAP_W - visW, camX));
+    camY = Math.max(0, Math.min(MAP_H - visH, camY));
+
+    world.style.transform = `translate(${-camX}px, ${-camY}px) scale(${SCALE})`;
+  }
+
+  // ==== Boucle de jeu
+  let lastT = performance.now();
+  function loop(t){
+    const dt = Math.min(0.05, (t - lastT) / 1000);
+    lastT = t;
+
+    const spd = BASE_SPEED * (keys.run ? RUN_MULT : 1);
+
+    let dx = (keys.d?1:0) - (keys.a?1:0);
+    let dy = (keys.s?1:0) - (keys.w?1:0);
+    const len = Math.hypot(dx, dy) || 1;
+    dx /= len; dy /= len;
+
+    let nextX = posX + dx * spd * dt;
+    let nextY = posY + dy * spd * dt;
+
+    [nextX, nextY] = resolveCollisions(nextX, nextY);
+
+    nextX = Math.max(0, Math.min(MAP_W - PLAYER_W, nextX));
+    nextY = Math.max(0, Math.min(MAP_H - PLAYER_H, nextY));
+
+    posX = nextX; posY = nextY;
+
+    player.style.left = posX + 'px';
+    player.style.top  = posY + 'px';
+
+    const dir = getDirection();
+    if(dir) player.style.backgroundImage = `url(${sprites[dir]})`;
+
+    applyDepth();
+    coords.textContent = `X: ${Math.round(posX)} | Y: ${Math.round(posY)}`;
+    applyCamera();
+
+    requestAnimationFrame(loop);
+  }
+
+  // ==== Init
+  drawDepthOverlays();
+  drawHitboxOverlays();
+  applyCamera();
+  requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>
