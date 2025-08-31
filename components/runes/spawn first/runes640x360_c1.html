@@ -96,25 +96,62 @@
     font-size: 14px; letter-spacing: .3px; backdrop-filter: blur(4px);
     user-select: none;
   }
+  /* === UI fixée en bas à droite === */
   #UI {
-    position: fixed; 
-    bottom: 20px; 
-    right: 20px;
-    z-index: 9999; /* au-dessus de tout */
-    pointer-events: none; /* évite de bloquer les clics gameplay */
-  }
+     position: fixed; 
+     bottom: 20px; 
+     right: 20px;
+     z-index: 9999; 
+     pointer-events: none; 
+     display: flex;
+     flex-direction: column; /* health bar au-dessus, slots en dessous */
+     align-items: flex-end;  /* alignés à droite */
+     gap: 8px;
+   }
+ 
+   #UI .healthbar {
+     width: calc(64px * 3);   /* largeur ×3 (exemple si base = 64px, ajuste si besoin) */
+     height: auto;
+     image-rendering: pixelated;
+     image-rendering: crisp-edges;
+   }
+ 
+   #UI .slots {
+     display: flex;
+     gap: 8px;
+   }
+ 
+   #UI .slots img {
+     position: relative;
+     width: calc(16px * 3);  /* même scale que la health bar (si slot natif = 16px) */
+     height: auto;
+     image-rendering: pixelated;
+     image-rendering: crisp-edges;
+     transition: transform 0.1s ease;
+   }
+ 
+   #UI .slots img.selected {
+     transform: scale(1.2); /* slot sélectionné un peu plus gros */
+   }
+   /* Ajout dans le CSS */
+    #pickupHint {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 25px;
+      font-family: cutepixel, sans-serif;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,.8);
+      font-weight: 400;
+      display: none;
+    }
 
-  #UI img {
-    position: fixed;          /* reste toujours à sa place par rapport à l’écran */
-    bottom: 12px;             /* marge par rapport au bas */
-    right: 12px;              /* marge par rapport à la droite */
-    width: 10%;
-    height: auto;             /* conserve le ratio */
-    image-rendering: pixelated;  /* garde les pixels nets */
-    image-rendering: crisp-edges; /* compatibilité navigateurs */
-    z-index: 9999;            /* au-dessus de tout */
-    pointer-events: none;     /* pas cliquable */
-  }
+    #pickupHint .itemname {
+      font-weight: 700;
+      color: #90b9ff; /* bleu métal */
+      font-size:25px;
+    }
 </style>
 
 </head>
@@ -146,8 +183,15 @@
   <div id="mouseCoords">Mouse: X: 0 | Y: 0</div>
   
   <div id="UI">
-      <img src="../../../assets/UI/gameplay/health_bar_90.png">
+    <img src="../../../assets/UI/gameplay/health_bar_90.png" class="healthbar">
+    <div class="slots">
+      <img src="../../../assets/UI/gameplay/slot.png" class="slot" data-slot="1">
+      <img src="../../../assets/UI/gameplay/slot.png" class="slot" data-slot="2">
+      <img src="../../../assets/UI/gameplay/slot.png" class="slot" data-slot="3">
+      <img src="../../../assets/UI/gameplay/slot.png" class="slot" data-slot="4">
   </div>
+  <div id="pickupHint"></div>
+</div>
 <script>
   // ==== Références DOM
   const viewport = document.getElementById('viewport');
@@ -155,6 +199,9 @@
   const player   = document.getElementById('player');
   const coords   = document.getElementById('coords');
   const mouseCoords = document.getElementById('mouseCoords');
+  const items = {
+  pierre_piectale: "../../../assets/sprites/items/pierre_piectale.png"
+};
 
   // ==== Constantes / paramètres
   const MAP_W = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--MAP-W'));
@@ -167,9 +214,35 @@
   const RUN_MULT   = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--RUN-MULT'));
 
   // ==== Etat joueur
-  let posX = MAP_W / 2 - PLAYER_W / 2;
-  let posY = MAP_H / 2 - PLAYER_H / 2;
+    let posX = 430;
+    let posY = 300;
 
+  const slots = document.querySelectorAll('#UI .slot');
+  let selectedSlot = 1;
+
+  function updateSelectedSlot(num) {
+    selectedSlot = num;
+    slots.forEach(s => s.classList.remove('selected'));
+    const slot = document.querySelector(`#UI .slot[data-slot="${num}"]`);
+    if(slot) slot.classList.add('selected');
+  }
+
+  // par défaut, slot 1 sélectionné
+  updateSelectedSlot(1);
+
+  document.addEventListener('keydown', (e) => {
+    let num = null;
+    switch(e.key) {
+      case "1": case "&": num = 1; break;
+      case "2": case "é": num = 2; break;
+      case "3": case "\"": num = 3; break;  // touche " sur AZERTY
+      case "4": case "'": num = 4; break;   // touche ' sur AZERTY
+    }
+    if(num !== null) {
+      updateSelectedSlot(num);
+      e.preventDefault();
+    }
+  });
   // ==== Clavier
   const keys = { w:false, a:false, s:false, d:false, run:false };
   document.addEventListener('keydown', (e)=>{
@@ -190,7 +263,86 @@
     if(k==='w'||k==='a'||k==='s'||k==='d'){ keys[k]=false; }
     if(e.key===' ') { keys.run = false; e.preventDefault(); }
   });
+      // ==== Ajout JS pour la pierre piectale
+    const pickupHint = document.getElementById("pickupHint");
 
+    let piectale = null; // contiendra {x,y,el,oscPhase}
+    if(Math.random() < 0.9){ // 90% de chances
+      const spawnX = 448 + Math.random() * (577-448);
+      const spawnY = 52 + Math.random() * (133-52);
+      const el = document.createElement("img");
+      el.src = items.pierre_piectale;
+      el.className = "map-item";
+      el.style.position = "absolute";
+      el.style.width = "16px";
+      el.style.height = "16px";
+      el.style.imageRendering = "pixelated";
+      el.style.left = spawnX+"px";
+      el.style.top  = spawnY+"px";
+      el.style.zIndex = 6;
+      world.appendChild(el);
+      piectale = {x:spawnX, y:spawnY, el, oscPhase:0, collected:false};
+    }
+
+    // ==== Oscillation + pickup check
+    function updateItem(dt){
+      if(!piectale || piectale.collected) return;
+      piectale.oscPhase += dt*2; // vitesse oscillation
+      const dy = Math.sin(piectale.oscPhase)*2; // amplitude 2px
+      piectale.el.style.top = (piectale.y+dy)+"px";
+
+      // Distance avec joueur
+      const dx = (posX+PLAYER_W/2) - (piectale.x+8);
+      const dy2 = (posY+PLAYER_H/2) - (piectale.y+8);
+      const dist = Math.hypot(dx,dy2);
+
+      if(dist < 24){ // proche
+        pickupHint.innerHTML = `E: récupérer <span class="itemname">Pierre Piectale</span>`;
+        pickupHint.style.display = "block";
+      } else {
+        pickupHint.style.display = "none";
+      }
+    }
+
+    // ==== Event récupération
+    document.addEventListener("keydown", (e)=>{
+      if(e.key.toLowerCase()==="e" && piectale && !piectale.collected){
+        const dx = (posX+PLAYER_W/2) - (piectale.x+8);
+        const dy = (posY+PLAYER_H/2) - (piectale.y+8);
+        const dist = Math.hypot(dx,dy);
+        if(dist<24){
+          piectale.collected = true;
+          piectale.el.remove();
+          pickupHint.style.display = "none";
+          // slot 1 rempli avec sprite
+          const slot1 = document.querySelector('#UI .slot[data-slot="1"]');
+          if(slot1){
+              // récupérer la position du slot dans la page
+              const rect = slot1.getBoundingClientRect();
+              const slotWidth  = rect.width;   // 32px
+              const slotHeight = rect.height;  // 32px
+              const itemWidth  = 50;           // ton png
+              const itemHeight = 50;
+              const sprite = document.createElement("img");
+              sprite.src = items.pierre_piectale;
+              sprite.style.position = "fixed"; // positionné par rapport à la fenêtre
+              sprite.style.left = rect.left + "px"; 
+              sprite.style.top  = (rect.top - 0) + "px"; // 16px au-dessus du slot
+              sprite.style.width = rect.width + "px"; 
+              sprite.style.height = rect.height + "px";
+              sprite.style.imageRendering = "pixelated";
+              sprite.style.pointerEvents = "none"; 
+              sprite.style.zIndex = 9999;
+              sprite.style.left = rect.left + (slotWidth - itemWidth)/2 + "px";
+              sprite.style.top  = rect.top  + (slotHeight - itemHeight)/2 + "px";
+              sprite.style.width  = itemWidth + "px";
+              sprite.style.height = itemHeight + "px";
+
+              document.body.appendChild(sprite);
+            }
+        }
+      }
+    });
   viewport.addEventListener("mousemove", (e) => {
     const rect = viewport.getBoundingClientRect();
     const vw = viewport.clientWidth;
@@ -211,7 +363,6 @@
 
     mouseCoords.textContent = `Mouse: X: ${Math.round(worldX)} | Y: ${Math.round(worldY)}`;
   });
-
   // ==== Sprites
   const sprites = {
     w: "../../../assets/player/W.png",
@@ -472,12 +623,14 @@
     player.style.top  = posY + 'px';
 
     const dir = getDirection();
-    if(dir) player.style.backgroundImage = `url(${sprites[dir]})`;
+    if(dir) {
+      player.style.backgroundImage = `url(${sprites[dir]})`;
+    }
 
     applyDepth();
     coords.textContent = `X: ${Math.round(posX)} | Y: ${Math.round(posY)}`;
     applyCamera();
-
+    updateItem(dt);
     requestAnimationFrame(loop);
   }
 
@@ -485,6 +638,10 @@
   drawDepthOverlays();
   drawHitboxOverlays();
   applyCamera();
+
+  // Sprite par défaut (ex: face bas = "s")
+  player.style.backgroundImage = `url(${sprites.s})`;
+
   requestAnimationFrame(loop);
 </script>
 
