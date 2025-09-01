@@ -1,0 +1,23 @@
+# Node modules (Electron + packages)
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dossiers de build / distribution
+dist/
+out/
+release/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Configurations locales
+.vscode/
+.idea/
+
+# Electron binaries
+*.asar
