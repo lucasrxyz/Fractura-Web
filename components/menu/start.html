@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fractura - Map animée</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: black;
+      image-rendering: pixelated;   /* crucial pour netteté pixel art */
+      image-rendering: crisp-edges;
+    }
+
+    .scroll {
+      position: relative;
+      width: 200%; /* pour contenir 2 images */
+      height: 100vh;
+      display: flex;
+      animation: scroll 100s linear infinite; /* animation infinie */
+    }
+
+    .scroll img {
+      width: auto;
+      height: 100%;
+      transform: scale(3) rotate(45deg); /* zoom x3 et rotation */
+      transform-origin: center;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); } /* on décale jusqu’à la moitié */
+    }
+  </style>
+</head>
+<body>
+  <div class="scroll">
+    <img src="bg.png" alt="bg">
+    <img src="bg.png" alt="bg">
+  </div>
+</body>
+</html>
