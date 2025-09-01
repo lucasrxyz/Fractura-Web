@@ -1,0 +1,171 @@
+  :root{
+    /* Taille NATIVE de la map (chaque image fait 640x360) */
+    --MAP-W: 640;      /* en px (valeur numérique) */
+    --MAP-H: 360;      /* en px (valeur numérique) */
+    --SCALE: 3;        /* zoom visuel x4 (pixel art net) */
+
+    /* taille du joueur en coordonnées NATIVE de la map */
+    --PLAYER-W: 16;    /* ajuste selon ton sprite */
+    --PLAYER-H: 24;
+
+    /* vitesse (px/seconde dans l'espace NATIVE) */
+    --SPEED: 80;
+    --RUN-MULT: 2.5;   /* espace = courir */
+  }
+
+  body {
+    font-family: cutepixel !important;
+    image-rendering: pixelated;           /* crucial pour netteté */
+    image-rendering: crisp-edges;
+  }
+  *{ box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background:#3a86ff; font-family: system-ui, sans-serif; }
+
+  /* Viewport = fenêtre caméra. On masque ce qui dépasse. */
+  #viewport{
+    position: fixed; inset: 0; overflow: hidden; background:#3a86ff;
+  }
+
+  /* Le monde (toutes les couches + joueur) vit dans #world. 
+     On le translate pour suivre le joueur puis on le scale x4 pour le pixel art. */
+  #world{
+    position: absolute; left: 0; top: 0;
+    width: calc(var(--MAP-W) * 1px);
+    height: calc(var(--MAP-H) * 1px);
+    image-rendering: pixelated;           /* crucial pour netteté */
+    image-rendering: crisp-edges;
+    transform-origin: 0 0;                /* les translations sont dans l'espace NATIVE */
+    will-change: transform;
+  }
+
+  /* Une couche = une image superposée, en coordonnées natives. */
+  .map-layer{
+    position: absolute; left: 0; top: 0;
+    width: calc(var(--MAP-W) * 1px);
+    height: calc(var(--MAP-H) * 1px);
+    image-rendering: pixelated; object-fit: contain;
+    pointer-events: none;
+  }
+
+  /* Joueur : un div sprite, taille en px NATIVE, photo collée en background. */
+  #player{
+    position: absolute;
+    width: calc(var(--PLAYER-W) * 1px);
+    height: calc(var(--PLAYER-H) * 1px);
+    background-repeat: no-repeat; background-size: 100% 100%;
+    image-rendering: pixelated; will-change: transform;
+    /* z-index par défaut entre les couches 4 et 7, modifié dynamiquement */
+    z-index: 6;
+  }
+
+  /* HUD coordonnées */
+  #coords{
+    position: fixed; left: 12px; bottom: 12px; padding: 6px 10px;
+    background: rgba(0,0,0,.5); color: #fff; border-radius: 8px; font-weight: 600;
+    font-size: 45px; letter-spacing: .3px; backdrop-filter: blur(4px);
+    user-select: none;
+  }
+
+  .bush-visual {
+      position: absolute; left:0; top:0; pointer-events:none;
+      background: rgba(0,200,0,0.4);
+      color:#fff; font-weight:700;
+      display:flex; align-items:center; justify-content:center;
+      text-shadow:0 1px 2px rgba(0,0,0,.6);
+    }
+
+  /* Overlays debug (zones / hitboxes / profondeur) créés par JS */
+  .zone-visual, .rock-visual, .hitbox-visual, .depth-visual {
+    position: absolute; left: 0; top: 0; pointer-events: none; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.6);
+  }
+  .zone-visual{ background: rgba(255,0,0,.35); }
+  .rock-visual{ background: rgba(0,0,139,.35); }
+  .hitbox-visual{ border: 2px solid #fff; background: rgba(0,0,0,.25); }
+  .depth-visual{ background: rgba(128,0,255,.35); } /* zone violette */
+
+  #mouseCoords{
+    position: fixed; left: 12px; bottom: 52px; padding: 6px 10px;
+    background: rgba(0,0,0,.5); color: #fff; border-radius: 8px; font-weight: 600;
+    font-size: 45px; letter-spacing: .3px; backdrop-filter: blur(4px);
+    user-select: none;
+  }
+  /* === UI fixée en bas à droite === */
+  #UI {
+     position: fixed; 
+     bottom: 20px; 
+     right: 20px;
+     z-index: 9999; 
+     pointer-events: none; 
+     display: flex;
+     flex-direction: column; /* health bar au-dessus, slots en dessous */
+     align-items: flex-end;  /* alignés à droite */
+     gap: 8px;
+   }
+ 
+   #UI .healthbar {
+     width: calc(64px * 3);   /* largeur ×3 (exemple si base = 64px, ajuste si besoin) */
+     height: auto;
+     image-rendering: pixelated;
+     image-rendering: crisp-edges;
+   }
+ 
+   #UI .slots {
+     display: flex;
+     gap: 8px;
+   }
+ 
+   #UI .slots img {
+     position: relative;
+     width: calc(16px * 3);  /* même scale que la health bar (si slot natif = 16px) */
+     height: auto;
+     image-rendering: pixelated;
+     image-rendering: crisp-edges;
+     transition: transform 0.1s ease;
+   }
+ 
+   #UI .slots img.selected {
+     transform: scale(1.2); /* slot sélectionné un peu plus gros */
+   }
+   /* Ajout dans le CSS */
+    #pickupHint {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 30px;
+      font-family: cutepixel, sans-serif;
+      color: white;
+      font-weight: 400;
+      display: none;
+      text-shadow:
+        -3px -3px 0 rgba(0,0,0,0.6),
+        3px -3px 0 rgba(0,0,0,0.6),
+        -3px 3px 0 rgba(0,0,0,0.6),
+        3px 3px 0 rgba(0,0,0,0.6);
+    }
+
+    #pickupHint .itemname {
+      font-weight: 700;
+      color: #008451; /* couleur de base */
+      font-size: 30px;
+      text-shadow:
+        -3px -3px 0 #00532F,
+        3px -3px 0 #00532F,
+        -3px 3px 0 #00532F,
+        3px 3px 0 #00532F;
+    }
+
+    #message {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 20px;
+      color: white;
+      background: rgba(0,0,0,0.6);
+      padding: 8px 16px;
+      border-radius: 8px;
+      display: none;
+    }
