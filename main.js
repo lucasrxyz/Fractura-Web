@@ -10,7 +10,7 @@ function createWindow () {
     }
   });
 
-  win.loadFile('components/runes/spawn first/runes640x360_c1.html');  // ton fichier principal
+  win.loadFile('components/menu/start.html');  // ton fichier principal
   win.setFullScreen(true);  // décommente si tu veux le plein écran dès le départ
 }
 
