@@ -113,21 +113,23 @@
 
     @keyframes buttonAppear {
       from { opacity: 0; transform: scale(0.6) rotate(0deg); }
-      to { opacity: 1; transform: scale(1) rotate(0deg); }
+      to   { opacity: 1; transform: scale(1) rotate(0deg); }
     }
+
 
     .menu-btn:hover,
     .menu-btn.active {
-      background-color: #6800E4;
-      border-bottom: 6px solid #8226CD;
-      transform: scale(1) rotate(3deg);
+     background-color: #6800E4;
+     border-bottom: 6px solid #8226CD;
+     transform: scale(1) rotate(3deg); /* scale ET rotate ensemble */
     }
 
     .menu-btn:active {
-      transform: scale(1.25) rotate(-2deg);
-      background-color: #39017d;
-      border-bottom: none;
+     transform: scale(1.25) rotate(-2deg); /* idem */
+     background-color: #39017d;
+     border-bottom: none;
     }
+
     .menu-btn.keyboard-active {
       background-color: #39017d;
       border-bottom: none;
@@ -172,6 +174,120 @@
     #controlsInfo.show {
       opacity: 1; /* visible quand on ajoute la classe show */
     }
+    /* Slot container */
+.slots-container {
+  display: none;
+  margin-top: 66px;
+  display: grid;
+  grid-template-columns: repeat(4, 130px);
+  gap: 20px;
+  justify-content: center;
+}
+
+.slot {
+  width: 130px;
+  height: 160px; /* un peu plus haut pour le texte */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  animation: slotAppear 0.5s forwards;
+}
+
+.slot:nth-child(1) { animation-delay: 0.1s; }
+.slot:nth-child(2) { animation-delay: 0.25s; }
+.slot:nth-child(3) { animation-delay: 0.4s; }
+.slot:nth-child(4) { animation-delay: 0.55s; }
+
+.slot img {
+  width: 65px;
+  height: 65px;
+  transform: scale(2);
+  transform-origin: center;
+}
+.slot img:hover {
+  transform: translate(-2%, -2%) scale(2.1) rotate(3deg);
+  transition: transform 0.2s ease-in-out;
+}
+.slot img:active {
+  transform: translate(-2%, -2%) scale(2.3) rotate(-2deg);
+  transition: transform 0.2s ease-in-out;
+}
+
+.slot-form:hover {
+  transform: translate(-2%, -2%) scale(2.1) rotate(3deg);
+  transition: transform 0.2s ease-in-out;
+}
+/* Label "Slot 1, Slot 2..." */
+.slot-label {
+  margin-top: 30px;
+  font-family: 'pixelise', monospace;
+  font-size: 14px;
+  color: white;
+}
+
+/* Formulaire qui remplace l'image */
+@keyframes slotFormAppear {
+  from {
+    opacity: 0;
+    transform: scale(1.5) rotate(-4deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(2);
+  }
+}
+
+.slot-form {
+  width: 75px;
+  height: 70px;
+  margin-right: 25px;
+  background: #6800E4;
+  color: white;
+  font-family: 'pixelise', monospace;
+  font-size: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 5px solid #8226CD;
+  animation: slotFormAppear 0.3s ease-out forwards;
+  transform-origin: center;
+}
+
+/* Input + Select stylisés */
+.slot-form input,
+.slot-form select {
+  width: 90%;
+  margin: 3px 0;
+  font-size: 10px;
+  font-family: 'pixelise', monospace;
+  background: #39017d;
+  border: none;
+  border-bottom: 2px solid #8226CD;
+  color: white;
+  padding: 2px;
+  text-align: center;
+}
+.slot-form input:focus,
+.slot-form select:focus {
+  outline: none;
+  border-bottom: 2px solid #fff;
+}
+
+  @keyframes slotAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
   </style>
 </head>
 <body>
@@ -191,9 +307,30 @@
   </div>
 
   <div class="menu-buttons" id="menuButtons">
-    <button class="menu-btn" id="btnContinue"onclick="debug()">Continuer</button>
-    <button class="menu-btn" id="btnNewGame" onclick="debug()">Nouvelle Partie</button>
+    <button class="menu-btn" id="btnContinue" onclick="debug()">Continuer</button>
+    <button class="menu-btn" id="btnNewGame" onclick="showSlots()">Nouvelle Partie</button>
   </div>
+  
+  <!-- Conteneur des slots (caché au départ) -->
+    <div class="slots-container" id="slotsContainer" style="display: none;">
+    <div class="slot" onclick="createSlot(this, 1)">
+      <img src="../../assets/UI/+.png" alt="+" width="65" height="65">
+      <div class="slot-label">Slot 1</div>
+    </div>
+    <div class="slot" onclick="createSlot(this, 2)">
+      <img src="../../assets/UI/+.png" alt="+" width="65" height="65">
+      <div class="slot-label">Slot 2</div>
+    </div>
+    <div class="slot" onclick="createSlot(this, 3)">
+      <img src="../../assets/UI/+.png" alt="+" width="65" height="65">
+      <div class="slot-label">Slot 3</div>
+    </div>
+    <div class="slot" onclick="createSlot(this, 4)">
+      <img src="../../assets/UI/+.png" alt="+" width="65" height="65">
+      <div class="slot-label">Slot 4</div>
+    </div>
+  </div>
+
 
   <div class="controls-info" id="controlsInfo">
     <img src="../../assets/UI/title screen/up_down_arrows.png" alt="Flèches" class="fleches"> 
@@ -243,6 +380,45 @@
         }
       }
     });
+
+    function showSlots() {
+      const slots = document.getElementById("slotsContainer");
+      // toggle affichage
+      if (slots.style.display === "none" || slots.style.display === "") {
+        slots.style.display = "grid"; // affiche les slots
+      } else {
+        slots.style.display = "none"; // masque si déjà affichés
+      }
+    }
+
+
+    function createSlot(slotElement, index) {
+      const slots = document.querySelectorAll('.slot');
+
+      // refermer les autres slots
+      slots.forEach(s => {
+        if (s !== slotElement) {
+          s.innerHTML = `
+            <img src="../../assets/UI/+.png" alt="+" width="65" height="65">
+            <div class="slot-label">Slot ${[...slots].indexOf(s) + 1}</div>
+          `;
+          s.onclick = () => createSlot(s, [...slots].indexOf(s) + 1);
+        }
+      });
+    
+      // remplir le slot actuel avec le formulaire
+      slotElement.innerHTML = `
+        <div class="slot-form" style="border-radius:5px;">
+          <input type="text" placeholder="Nom" />
+          <select>
+            <option>Facile</option>
+            <option>Moyen</option>
+            <option>Difficile</option>
+          </select>
+        </div>
+      `;
+      slotElement.onclick = null;
+    }
   </script>
 
   <div class="version-text">v1.0.0-beta</div>
