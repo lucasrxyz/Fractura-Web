@@ -17,6 +17,7 @@
     font-family: cutepixel !important;
     image-rendering: pixelated;           /* crucial pour netteté */
     image-rendering: crisp-edges;
+    overflow:hidden;
   }
   *{ box-sizing: border-box; }
   html, body { height: 100%; margin: 0; background:#3a86ff; font-family: system-ui, sans-serif; }

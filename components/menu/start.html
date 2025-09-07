@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fractura - Map animée</title>
-<style>
+  <!-- <link rel="stylesheet" href="../../styles/menu_principal.css"> -->
+   <style>
+    
     body {
   margin: 0;
   background: black;
@@ -16,8 +17,8 @@
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   user-select: none;
-}
-
+  font-family: cutepixel !important;
+    }
 /* --- Animation titre --- */
 .stack {
   position: relative;
@@ -350,7 +351,8 @@
 .difficulty-btn.active {
   background: #ffffffaa;
 }
-</style>
+   </style>
+  <title>Fractura - Map animée</title>
 </head>
 <body>
   <div class="stack">
@@ -370,7 +372,7 @@
 
   <div class="menu-buttons" id="menuButtons">
     <button class="menu-btn" id="btnContinue" onclick="debug()">Continuer</button>
-    <button class="menu-btn" id="btnNewGame" onclick="showSlots()">Nouvelle Partie</button>
+    <button class="menu-btn" id="btnNewGame" onclick="showSlots()">Charger une partie</button>
   </div>
   
   <!-- Conteneur des slots (caché au départ) -->
@@ -454,7 +456,16 @@
     }
 
 
-    function createSlot(slotElement, index) {
+   function createSlot(slotElement, index) {
+  // Vérifie si une partie existe déjà dans ce slot
+  const existingName = localStorage.getItem(`slot${index}name`);
+  const existingDifficulty = localStorage.getItem(`slot${index}difficulty`);
+
+  if (existingName && existingDifficulty) {
+    alert(`Slot ${index} déjà utilisé :\nNom : ${existingName}\nDifficulté : ${existingDifficulty}`);
+    return;
+  }
+
   // Supprimer toute modale déjà ouverte
   const oldForm = document.querySelector(".slot-form");
   if (oldForm) oldForm.remove();
@@ -466,14 +477,12 @@
   form.innerHTML = `
     <h2>Commencer une nouvelle partie</h2>
     <div class="form-body">
-      <input type="text" placeholder="Nom" />
-      <div style="background-color=#ffffffaa;">
-        <div class="difficulty-options">
+      <input type="text" placeholder="Nom" id="slotName" />
+      <div class="difficulty-options">
         <button class="difficulty-btn" onclick="selectDifficulty(this, 'Facile')">Facile</button>
         <button class="difficulty-btn" onclick="selectDifficulty(this, 'Moyen')">Moyen</button>
         <button class="difficulty-btn" onclick="selectDifficulty(this, 'Difficile')">Difficile</button>
       </div>
-    </div>
     </div>
     <div class="form-actions">
       <button onclick="closeSlotForm()">Annuler</button>
@@ -490,9 +499,134 @@ function closeSlotForm() {
 }
 
 function startNewGame(index) {
-  alert("Nouvelle partie lancée dans le slot " + index);
-  closeSlotForm();
+  const nameInput = document.getElementById("slotName");
+  const name = nameInput ? nameInput.value.trim() : null; // si c'est un nouveau slot
+
+  if (!nameInput) {
+    // Slot déjà utilisé → rien à valider côté nom
+    console.log("Slot sélectionné :", index);
+    localStorage.setItem("idSlot", index);
+    window.location.href = "../runes/spawn first/runes640x360_c1.html";
+    return;
+  }
+
+  if (!name) {
+    alert("Veuillez entrer un nom pour la partie !");
+    return;
+  }
+
+  if (!chosenDifficulty) {
+    alert("Veuillez choisir une difficulté !");
+    return;
+  }
+
+  // Sauvegarde dans le localStorage
+  localStorage.setItem("idSlot", index);
+  localStorage.setItem(`slot${index}name`, name);
+  localStorage.setItem(`slot${index}difficulty`, chosenDifficulty);
+
+  // Mettre l'image du slot en opacity 50%
+  const slots = document.querySelectorAll('.slot');
+  const slotImg = slots[index - 1].querySelector('img');
+  slotImg.style.opacity = "0.5";
+
+  console.log("Nouvelle partie créée. idSlot :", index);
+
+  // Redirection
+  window.location.href = "../runes/spawn first/runes640x360_c1.html";
 }
+
+// Initialisation des slots à l'ouverture de la page
+// Initialisation des slots à l'ouverture de la page
+window.addEventListener('DOMContentLoaded', () => {
+  const slots = document.querySelectorAll('.slot');
+  slots.forEach((slot, i) => {
+    const idx = i + 1;
+    const name = localStorage.getItem(`slot${idx}name`);
+    const difficulty = localStorage.getItem(`slot${idx}difficulty`);
+    const coins = localStorage.getItem(`slot${idx}coins`) || 0;
+    const life = localStorage.getItem(`slot${idx}life`) || 0;
+    const location = localStorage.getItem(`slot${idx}location`) || "Lieu inconnu";
+
+    if (name && difficulty) {
+      // Slot déjà utilisé → image opacity 50%
+      slot.querySelector('img').style.opacity = "0.5";
+
+      slot.onclick = () => {
+        // Supprimer toute modale déjà ouverte
+        const oldForm = document.querySelector(".slot-form");
+        if (oldForm) oldForm.remove();
+
+        // Créer la div modale
+        const form = document.createElement("div");
+        form.className = "slot-form";
+
+        form.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;padding-bottom:6px; margin-bottom:8px;margin-right:5px;">
+            <h2 style="flex:1; text-align:left; margin:0;margin-left:5px;margin-right:30px;">${name}</h2>
+            <div style="display:flex; gap:12px; align-items:center;">
+              <div style="display:flex; align-items:center; gap:4px;">
+                <img src="../../assets/UI/mdi/coin.png" alt="Coins" style="width:18px; height:18px;">
+                <span>${coins}</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <img src="../../assets/UI/mdi/hearth.png" alt="Vie" style="width:18px; height:18px;">
+                <span>${life}</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-body" style="align-items:flex-start; text-align:left;">
+            <p><strong>Difficulté :</strong> ${difficulty}</p>
+            <p><strong>Lieu :</strong> ${location}</p>
+          </div>
+          <div class="form-actions">
+            <button onclick="closeSlotForm()">Retour</button>
+            <button onclick="startNewGame(${idx})">Charger</button>
+          </div>
+        `;
+
+        document.body.appendChild(form);
+      };
+    }
+  });
+});
+
+  const slots = document.querySelectorAll('.slot');
+  slots.forEach((slot, i) => {
+    const idx = i + 1;
+    const name = localStorage.getItem(`slot${idx}name`);
+    const difficulty = localStorage.getItem(`slot${idx}difficulty`);
+
+    if (name && difficulty) {
+      // Slot déjà utilisé → image opacity 50%
+      slot.querySelector('img').style.opacity = "0.5";
+
+      slot.onclick = () => {
+        // Supprimer toute modale déjà ouverte
+        const oldForm = document.querySelector(".slot-form");
+        if (oldForm) oldForm.remove();
+
+        // Créer la div modale
+        const form = document.createElement("div");
+        form.className = "slot-form";
+
+        // Contenu avec infos de la partie
+        form.innerHTML = `
+          <h2>Slot ${idx} déjà utilisé</h2>
+          <div class="form-body">
+            <p>Nom : ${name}</p>
+            <p>Difficulté : ${difficulty}</p>
+          </div>
+          <div class="form-actions">
+            <button onclick="closeSlotForm()">Retour</button>
+            <button onclick="startNewGame(${idx})">Jouer</button>
+          </div>
+        `;
+
+        document.body.appendChild(form);
+      };
+    }
+  });
 
 let chosenDifficulty = null;
 
