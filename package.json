@@ -5,13 +5,19 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "dist": "electron-builder", 
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lucasrxyz/Fractura-Web.git"
   },
-  "keywords": ["rpg","pixel-art","2D","top-down"],
+  "keywords": [
+    "rpg",
+    "pixel-art",
+    "2D",
+    "top-down"
+  ],
   "author": "Lucas Deudon",
   "license": "ISC",
   "bugs": {
@@ -19,6 +25,15 @@
   },
   "homepage": "https://github.com/lucasrxyz/Fractura-Web#readme",
   "devDependencies": {
-    "electron": "^37.4.0"
+    "electron": "^37.4.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.fractura.game",
+    "productName": "Fractura",
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    }
   }
 }
