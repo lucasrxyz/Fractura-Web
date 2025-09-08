@@ -351,6 +351,51 @@
 .difficulty-btn.active {
   background: #ffffffaa;
 }
+@keyframes shake {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  25% { transform: translate(-50%, -49%) rotate(0deg); }
+  50% { transform: translate(-50%, -51%) rotate(0deg); }
+  75% { transform: translate(-50%, -49%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(0deg); }
+}
+.save-slot {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:#8226CD;
+  padding:10px;
+  border-radius:5px;
+  cursor:pointer;
+  color:white;
+  font-family:'pixelise',monospace;
+  transition:0.2s;
+}
+.save-slot:hover {
+  background:#9C3EFF;
+}
+.save-slot img {
+  width:18px;
+  height:18px;
+  margin-right:5px;
+}
+.save-info {
+  display:flex;
+  flex-direction:column;
+}
+.save-name {
+  font-size:16px;
+  font-weight:bold;
+}
+.save-details {
+  font-size:14px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+#saveModal {
+  transform: translate(-50%, -50%) scale(2);
+}
+
    </style>
   <title>Fractura - Map animée</title>
 </head>
@@ -394,6 +439,20 @@
       <div class="slot-label">Partie 4</div>
     </div>
   </div>
+<!-- Conteneur modal pour les sauvegardes -->
+<div id="saveModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;background:#6800E4;border-radius:10px;border-bottom:5px solid #8226CD;z-index:99999;padding:20px;animation:shake 1.5s infinite alternate;">
+  <!-- Bouton fermer -->
+  <button onclick="closeSaveModal()" style="position:absolute;top:10px;left:10px;background:#39017d;color:white;border:none;padding:5px 10px;cursor:pointer;">X</button>
+  
+  <div style="text-align:center;margin-bottom:15px;color:white;font-family:'pixelise',monospace;font-size:18px;">Charger une partie</div>
+
+  <div id="saveSlots" style="display:flex;flex-direction:column;gap:15px;">
+    <!-- Les slots seront insérés ici via JS -->
+  </div>
+</div>
+
+<!-- Overlay pour flouter le reste -->
+<div id="overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(3px) brightness(0.6);z-index:9998;"></div>
 
 
   <div class="controls-info" id="controlsInfo">
@@ -639,7 +698,72 @@ function selectDifficulty(btn, diff) {
   chosenDifficulty = diff;
 }
 
+function showSaveModal() {
+  document.getElementById('overlay').style.display = 'block';
+  document.getElementById('saveModal').style.display = 'block';
+  renderSaveSlots();
+}
 
+// Ferme le modal
+function closeSaveModal() {
+  document.getElementById('overlay').style.display = 'none';
+  document.getElementById('saveModal').style.display = 'none';
+}
+
+// Fonction pour générer les slots depuis localStorage
+function renderSaveSlots() {
+  const container = document.getElementById('saveSlots');
+  container.innerHTML = ''; // reset
+
+  for (let i=1; i<=3; i++) {
+    const isCreated = localStorage.getItem(`slot${i}created`) === 'true';
+    const name = localStorage.getItem(`slot${i}name`) || 'Vide';
+    const difficulty = localStorage.getItem(`slot${i}difficulty`) || '--';
+    const coins = localStorage.getItem(`slot${i}coins`) || '--';
+    const life = localStorage.getItem(`slot${i}life`) || '--';
+    const lastSave = localStorage.getItem(`slot${i}lastSave`) || '--.--.----';
+
+    const slot = document.createElement('div');
+    slot.className = 'save-slot';
+    slot.onclick = () => {
+      if (isCreated) {
+        localStorage.setItem('idSlot', i);
+        window.location.href = "../runes/spawn first/runes640x360_c1.html";
+      } else {
+        alert('Ce slot est vide !');
+      }
+    };
+
+    slot.innerHTML = `
+      <div class="save-info">
+        <div class="save-name">${name}</div>
+        <div class="save-details">
+          <span>${difficulty}</span>
+          <span>${lastSave}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div style="display:flex;align-items:center;"><img src="../../assets/UI/mdi/coin.png">${coins}</div>
+        <div style="display:flex;align-items:center;"><img src="../../assets/UI/mdi/hearth.png">${life}</div>
+      </div>
+    `;
+
+    container.appendChild(slot);
+  }
+}
+
+// Pour ton bouton "Charger une partie"
+document.getElementById('btnNewGame').addEventListener('click', showSaveModal);
+
+// Exemple initialisation localStorage
+if (!localStorage.getItem('slot1created')) {
+  localStorage.setItem('slot1created','true');
+  localStorage.setItem('slot1name','Nom de partie');
+  localStorage.setItem('slot1difficulty','Facile');
+  localStorage.setItem('slot1coins','0');
+  localStorage.setItem('slot1life','3');
+  localStorage.setItem('slot1lastSave','07.09.2024');
+}
   </script>
 
   <div class="version-text">v1.0.0-beta</div>

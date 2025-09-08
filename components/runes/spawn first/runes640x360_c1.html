@@ -31,8 +31,8 @@
   </div>
 
   <!-- HUD coordonnées -->
-  <div id="coords">X: 0 | Y: 0</div>
-  <div id="mouseCoords">Mouse: X: 0 | Y: 0</div>
+  <div id="coords" style="opacity: 100;">X: 0 | Y: 0</div>
+  <div id="mouseCoords" style="opacity: 100;">Mouse: X: 0 | Y: 0</div>
 
     <div id="UI">
       <img src="../../../assets/UI/gameplay/health_bar_90.png" class="healthbar">
@@ -48,6 +48,34 @@
   <p id="inventaire"></p>
   <div id="message"></div>
 <script>
+// ==== Soundtrack avec loop aléatoire
+const soundtrack = new Audio("../../../assets/soundtracks/Nurture...mp3");
+soundtrack.volume = 0.5;
+
+function playSoundtrackRandom() {
+  soundtrack.currentTime = 0;
+  soundtrack.play().catch(e => console.log("Autoplay bloqué:", e));
+
+  soundtrack.onended = () => {
+    const delay = 30 + Math.random() * (120 - 30); // 30s à 2min
+    setTimeout(playSoundtrackRandom, delay * 1000);
+  };
+}
+
+// ==== Jouer la musique au premier clic ou touche
+function initSoundtrack() {
+  playSoundtrackRandom();
+  // On supprime les listeners après le premier déclenchement
+  document.removeEventListener("click", initSoundtrack);
+  document.removeEventListener("keydown", initSoundtrack);
+}
+
+document.addEventListener("click", initSoundtrack);
+document.addEventListener("keydown", initSoundtrack);
+
+
+
+
   // ==== Références DOM
   const viewport = document.getElementById('viewport');
   const world    = document.getElementById('world');
@@ -83,45 +111,6 @@
 
   // par défaut, slot 1 sélectionné
   updateSelectedSlot(1);
-let pierres = parseInt(localStorage.getItem("pierre_piectale")) || 0;
-
-// Fonction appelée quand le joueur ramasse une pierre piectale
-let pickupMsg = null;
-let pickupTimeout = null;
-
-function ramasserPierre(qte = 1) {
-  pierres += qte;
-  localStorage.setItem("pierre_piectale", pierres);
-
-  if (!pickupMsg) {
-    // création de la div au premier pickup
-    pickupMsg = document.createElement("div");
-    pickupMsg.style.position = "fixed";
-    pickupMsg.style.top = "20px";
-    pickupMsg.style.left = "50%";
-    pickupMsg.style.transform = "translateX(-50%)";
-    pickupMsg.style.fontSize = "20px";
-    pickupMsg.style.color = "white";
-    pickupMsg.style.background = "rgba(0,0,0,0.6)";
-    pickupMsg.style.padding = "6px 12px";
-    pickupMsg.style.borderRadius = "6px";
-    pickupMsg.style.zIndex = "9999";
-    document.body.appendChild(pickupMsg);
-    pickupMsg.amount = 0; // compteur temporaire
-  }
-
-  // incrémente le compteur
-  pickupMsg.amount += qte;
-  pickupMsg.innerText = `+${pickupMsg.amount} pierre piectale${pickupMsg.amount > 1 ? "s" : ""}`;
-  pickupMsg.style.display = "block";
-
-  // reset du timer
-  if (pickupTimeout) clearTimeout(pickupTimeout);
-  pickupTimeout = setTimeout(() => {
-    pickupMsg.style.display = "none";
-    pickupMsg.amount = 0;
-  }, 1500);
-}
   document.addEventListener('keydown', (e) => {
     let num = null;
     switch(e.key) {
@@ -158,72 +147,10 @@ function ramasserPierre(qte = 1) {
       // ==== Ajout JS pour la pierre piectale
     const pickupHint = document.getElementById("pickupHint");
 
-    let piectales = []; // tableau des pierres
-
-    for (let i = 0; i < 10; i++) {
-      if (Math.random() < 0.9) { // 90% de chance de spawn
-        const spawnX = 448 + Math.random() * (577 - 448);
-        const spawnY = 52 + Math.random() * (133 - 52);
-        const el = document.createElement("img");
-        el.src = items.pierre_piectale;
-        el.className = "map-item";
-        el.style.position = "absolute";
-        el.style.width = "16px";
-        el.style.height = "16px";
-        el.style.imageRendering = "pixelated";
-        el.style.left = spawnX + "px";
-        el.style.top  = spawnY + "px";
-        el.style.zIndex = 6;
-        world.appendChild(el);
-        piectales.push({x: spawnX, y: spawnY, el, oscPhase: 0, collected: false});
-      }
-    }
-
-    // ==== Oscillation + pickup check
-    function updateItem(dt) {
-      pickupHint.style.display = "none"; // on cache par défaut
-
-      for (let p of piectales) {
-        if (p.collected) continue;
-
-        // oscillation
-        p.oscPhase += dt * 2;
-        const dy = Math.sin(p.oscPhase) * 2;
-        p.el.style.top = (p.y + dy) + "px";
-
-        // distance avec joueur
-        const dx = (posX + PLAYER_W / 2) - (p.x + 8);
-        const dy2 = (posY + PLAYER_H / 2) - (p.y + 8);
-        const dist = Math.hypot(dx, dy2);
-
-        if (dist < 24) {
-          pickupHint.innerHTML = `E: récupérer <span class="itemname">Pierre Piectale</span>`;
-          pickupHint.style.display = "block";
-          break; // on affiche le hint seulement pour une pierre proche
-        }
-      }
-    }
 
 
-    // ==== Event récupération
-    document.addEventListener("keydown", (e) => {
-      if (e.key.toLowerCase() === "e") {
-        for (let p of piectales) {
-          if (!p.collected) {
-            const dx = (posX + PLAYER_W / 2) - (p.x + 8);
-            const dy = (posY + PLAYER_H / 2) - (p.y + 8);
-            const dist = Math.hypot(dx, dy);
-            if (dist < 24) {
-              p.collected = true;
-              p.el.remove();
-              pickupHint.style.display = "none";
-              ramasserPierre(1);
-              break; // on en ramasse une seule par appui
-            }
-          }
-        }
-      }
-    });
+
+  
 
   viewport.addEventListener("mousemove", (e) => {
     const rect = viewport.getBoundingClientRect();
@@ -317,6 +244,8 @@ function ramasserPierre(qte = 1) {
      { x1: 488, x2: 500, y1: 327, y2: 328 },
      { x1: 457, x2: 486, y1: 349, y2: 350 },
      { x1: 265, x2: 278, y1: 342, y2: 343 },
+     { x1: 378, x2: 395, y1: 291, y2: 293 },
+
   ];
 
   // ⚡ Nouvelle famille : depthZones
@@ -543,7 +472,6 @@ function ramasserPierre(qte = 1) {
     applyDepth();
     coords.textContent = `X: ${Math.round(posX)} | Y: ${Math.round(posY)}`;
     applyCamera();
-    updateItem(dt);
     requestAnimationFrame(loop);
   }
 
